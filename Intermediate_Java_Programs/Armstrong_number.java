@@ -1,4 +1,4 @@
-package BASIC_JAVA_PROBLEM;
+package Intermediate_Java_Programs;
 
 import java.util.Scanner;
 
