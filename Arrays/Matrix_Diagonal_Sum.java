@@ -1,3 +1,4 @@
+
 package Arrays;
 
 public class Matrix_Diagonal_Sum {
@@ -21,3 +22,4 @@ public class Matrix_Diagonal_Sum {
         System.out.println(sum);
     }
 }
+
