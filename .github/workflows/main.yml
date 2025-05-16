@@ -7,25 +7,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install and start SSH server
+    - name: Install SSH server
       run: |
         sudo apt update
         sudo apt install -y openssh-server
         sudo systemctl start ssh
         sudo systemctl enable ssh
 
-    - name: Set password for runner user
-      run: echo 'runner:P@ssw0rd!' | sudo chpasswd
+    - name: Set password for runner
+      run: echo "runner:P@ssw0rd!" | sudo chpasswd
 
-    - name: Print SSH login info
+    - name: Enable password authentication
       run: |
-        echo "🧑 Username: runner"
-        echo "🔑 Password: P@ssw0rd!"
-        echo "⏳ Waiting for tunnel URL..."
+        sudo sed -i 's/^#\?PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+        sudo sed -i 's/^#\?ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/' /etc/ssh/sshd_config
+        sudo sed -i 's/^#\?UsePAM no/UsePAM yes/' /etc/ssh/sshd_config
+        sudo systemctl restart ssh
 
-    - name: Create reverse SSH tunnel with Serveo
-      run: |
-        ssh -o StrictHostKeyChecking=no -R 0:localhost:22 serveo.net
+    - name: Start Serveo tunnel
+      run: ssh -o StrictHostKeyChecking=no -R 0:localhost:22 serveo.net
       timeout-minutes: 10
 
     - name: Keep runner alive
