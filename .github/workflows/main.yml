@@ -1,34 +1,33 @@
-name: Linux VPS Setup
+name: SSH Access via Serveo
 
-on: [push, workflow_dispatch]
+on: [workflow_dispatch]
 
 jobs:
-  build:
+  ssh-access:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install Dependencies
-      run: sudo apt update && sudo apt install -y wget unzip openssh-server
+    - name: Install and start SSH server
+      run: |
+        sudo apt update
+        sudo apt install -y openssh-server
+        sudo systemctl start ssh
+        sudo systemctl enable ssh
 
-    - name: Download Ngrok
-      run: wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip -O ngrok.zip
+    - name: Set password for runner user
+      run: echo 'runner:P@ssw0rd!' | sudo chpasswd
 
-    - name: Extract Ngrok
-      run: unzip ngrok.zip
+    - name: Print SSH info
+      run: |
+        echo "👉 Username: runner"
+        echo "👉 Password: P@ssw0rd!"
+        echo "👉 Use the tunnel link from the next step"
 
-    - name: Authenticate Ngrok
-      run: ./ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-      env:
-        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+    - name: Create reverse SSH tunnel with Serveo
+      run: |
+        echo "⏳ Creating tunnel on Serveo..."
+        ssh -o StrictHostKeyChecking=no -R 2222:localhost:22 serveo.net
+      timeout-minutes: 1
 
-    - name: Enable SSH Server
-      run: sudo systemctl start ssh && sudo systemctl enable ssh
-
-    - name: Set Default Password (Auto)
-      run: echo "runner:P@ssw0rd!" | sudo chpasswd
-
-    - name: Allow SSH Login
-      run: sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sudo systemctl restart ssh
-
-    - name: Create SSH Tunnel with Ngrok
-      run: ./ngrok tcp 22
+    - name: Keep runner alive (for SSH access)
+      run: sleep 3600
