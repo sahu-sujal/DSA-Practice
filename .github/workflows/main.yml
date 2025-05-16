@@ -17,17 +17,16 @@ jobs:
     - name: Set password for runner user
       run: echo 'runner:P@ssw0rd!' | sudo chpasswd
 
-    - name: Print SSH info
+    - name: Print SSH login info
       run: |
-        echo "👉 Username: runner"
-        echo "👉 Password: P@ssw0rd!"
-        echo "👉 Use the tunnel link from the next step"
+        echo "🧑 Username: runner"
+        echo "🔑 Password: P@ssw0rd!"
+        echo "⏳ Waiting for tunnel URL..."
 
     - name: Create reverse SSH tunnel with Serveo
       run: |
-        echo "⏳ Creating tunnel on Serveo..."
-        ssh -o StrictHostKeyChecking=no -R 2222:localhost:22 serveo.net
-      timeout-minutes: 1
+        ssh -o StrictHostKeyChecking=no -R 0:localhost:22 serveo.net
+      timeout-minutes: 10
 
-    - name: Keep runner alive (for SSH access)
+    - name: Keep runner alive
       run: sleep 3600
