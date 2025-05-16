@@ -25,7 +25,7 @@ jobs:
       run: sudo systemctl start ssh && sudo systemctl enable ssh
 
     - name: Set Default Password (Auto)
-      run: echo "runneradmin:P@ssw0rd!" | sudo chpasswd
+      run: echo "runner:P@ssw0rd!" | sudo chpasswd
 
     - name: Allow SSH Login
       run: sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sudo systemctl restart ssh
