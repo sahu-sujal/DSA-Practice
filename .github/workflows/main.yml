@@ -7,15 +7,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install SSH server
+    - name: Install and start SSH server
       run: |
         sudo apt update
         sudo apt install -y openssh-server
         sudo systemctl start ssh
         sudo systemctl enable ssh
 
-    - name: Set password for runner
-      run: echo "runner:P@ssw0rd!" | sudo chpasswd
+    - name: Create a new SSH user
+      run: |
+        sudo useradd -m -s /bin/bash devuser
+        echo 'devuser:P@ssw0rd!' | sudo chpasswd
+        echo 'devuser ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/devuser
 
     - name: Enable password authentication
       run: |
@@ -24,20 +27,11 @@ jobs:
         sudo sed -i 's/^#\?UsePAM .*/UsePAM yes/' /etc/ssh/sshd_config
         sudo systemctl restart ssh
 
-    - name: Ensure shell and home for runner
-      run: |
-        sudo usermod -s /bin/bash runner
-        sudo mkdir -p /home/runner
-        sudo chown runner:runner /home/runner
-
-    - name: Confirm SSH config
-      run: grep -Ei 'PasswordAuthentication|ChallengeResponseAuthentication|UsePAM' /etc/ssh/sshd_config
-
-    - name: Start Serveo Tunnel
+    - name: Start Serveo tunnel
       run: |
         echo "⏳ Connecting to Serveo..."
         ssh -o StrictHostKeyChecking=no -R 0:localhost:22 serveo.net
       timeout-minutes: 10
 
-    - name: Keep Runner Alive
+    - name: Keep runner alive
       run: sleep 3600
