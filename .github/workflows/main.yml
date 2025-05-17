@@ -1,4 +1,4 @@
-name: SSH Access via Serveo
+name: SSH Access via Serveo with Public Key
 
 on: [workflow_dispatch]
 
@@ -7,31 +7,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install and start SSH server
+    - name: 🛠️ Install SSH server
       run: |
         sudo apt update
         sudo apt install -y openssh-server
         sudo systemctl start ssh
         sudo systemctl enable ssh
 
-    - name: Create a new SSH user
+    - name: 👤 Create user `devuser` and set up key
       run: |
         sudo useradd -m -s /bin/bash devuser
-        echo 'devuser:P@ssw0rd!' | sudo chpasswd
+        sudo mkdir -p /home/devuser/.ssh
+        echo "${{ secrets.DEVUSER_SSH_PUBKEY }}" | sudo tee /home/devuser/.ssh/authorized_keys
+        sudo chown -R devuser:devuser /home/devuser/.ssh
+        sudo chmod 700 /home/devuser/.ssh
+        sudo chmod 600 /home/devuser/.ssh/authorized_keys
         echo 'devuser ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/devuser
 
-    - name: Enable password authentication
+    - name: 🔧 Ensure SSH allows key login
       run: |
-        sudo sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-        sudo sed -i 's/^#\?ChallengeResponseAuthentication .*/ChallengeResponseAuthentication yes/' /etc/ssh/sshd_config
-        sudo sed -i 's/^#\?UsePAM .*/UsePAM yes/' /etc/ssh/sshd_config
+        sudo sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
+        sudo sed -i 's/^#\?PubkeyAuthentication .*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
         sudo systemctl restart ssh
 
-    - name: Start Serveo tunnel
+    - name: 🌐 Start Serveo tunnel (watch for port number)
       run: |
         echo "⏳ Connecting to Serveo..."
         ssh -o StrictHostKeyChecking=no -R 0:localhost:22 serveo.net
       timeout-minutes: 10
 
-    - name: Keep runner alive
+    - name: 🕒 Keep runner alive
       run: sleep 3600
